@@ -30,7 +30,7 @@ function App() {
       setNotification(`Loading Filter Page ${filterPage}...`);
       
       const filterParams = { ...filters, filterPage };
-      const response = await axios.get('http://127.0.0.1:5000/filter_data', {
+      const response = await axios.get('http://192.168.10.107:5000/filter_data', {
         params: filterParams
       });
       const newData = response.data;
