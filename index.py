@@ -128,7 +128,7 @@ def upload_csv():
         clear_database()
         
         # Process the CSV file and insert data into the database
-        process_csv_and_insert_to_db(file_path)
+        # process_csv_and_insert_to_db(file_path)
         
         return jsonify({"success": True, "message": "File uploaded and processed successfully"})
 
@@ -137,6 +137,8 @@ def clear_database():
     con = sqlite3.connect('data.db')
     cur = con.cursor()
     cur.execute('DELETE FROM data')
+    con.commit()
+    cur.execute('VACUUM')
     con.commit()
     con.close()
 
