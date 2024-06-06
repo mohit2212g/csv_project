@@ -31,6 +31,7 @@ function App() {
       
       const filterParams = { ...filters, filterPage };
       const response = await axios.get('http://192.168.10.107:5000/filter_data', {
+      // const response = await axios.get('http://localhost:5000/filter_data', {
         params: filterParams
       });
       const newData = response.data;

@@ -56,6 +56,7 @@ const FilterData = ({ data, columns, totalRecords, handleFilterChange, filters, 
   const downloadFilteredData = async () => {
     try {
       const response = await axios.get('http://192.168.10.107:5000/download_filtered_data', {
+      // const response = await axios.get('http://localhost:5000/download_filtered_data', {
         params: filterInputs,
         responseType: 'blob',  // Important
       });

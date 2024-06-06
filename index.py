@@ -4,15 +4,21 @@ from flask_cors import CORS
 import os
 import csv
 from io import StringIO
+import subprocess
 
 app = Flask(__name__)
 CORS(app)
 
-UPLOAD_FOLDER = 'uploads'
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+# UPLOAD_FOLDER = 'uploads'
+# if not os.path.exists(UPLOAD_FOLDER):
+#     os.makedirs(UPLOAD_FOLDER)
 
+# app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+UPLOAD_FOLDER = '.'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+CSV_FILE_NAME = '123_Output.CSV'
+
 
 def query_db(query, args=(), one=False):
     con = sqlite3.connect('data.db')
@@ -97,9 +103,9 @@ def download_filtered_data():
     si = StringIO()
     writer = csv.writer(si)
     
-    # Write header
-    if data:
-        writer.writerow(data[0].keys())
+    # # Write header
+    # if data:
+    #     writer.writerow(data[0].keys())
     
     # Write data rows
     for row in data:
@@ -112,7 +118,30 @@ def download_filtered_data():
         'Content-Type': 'text/csv',
         'Content-Disposition': 'attachment; filename=filtered_data.csv'
     }
-    
+
+# by PYTHON
+
+# @app.route('/upload_csv', methods=['POST'])
+# def upload_csv():
+#     if 'file' not in request.files:
+#         return jsonify({"error": "No file part"}), 400
+#     file = request.files['file']
+#     if file.filename == '':
+#         return jsonify({"error": "No selected file"}), 400
+#     if file:
+#         file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+#         file.save(file_path)
+        
+#         # Clear the database
+#         clear_database()
+        
+#         # Process the CSV file and insert data into the database by PYTHON
+#         process_csv_and_insert_to_db(file_path)
+
+        
+#         return jsonify({"success": True, "message": "File uploaded and processed successfully"})
+
+# by C++
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
     if 'file' not in request.files:
@@ -121,16 +150,29 @@ def upload_csv():
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
     if file:
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], CSV_FILE_NAME)
+        
+        # Delete the old file if it exists
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        
+        # Save the new file
         file.save(file_path)
         
         # Clear the database
         clear_database()
         
-        # Process the CSV file and insert data into the database
-        process_csv_and_insert_to_db(file_path)
+        # Compile and run the C++ script to process the CSV and insert data into the database
+        compile_result = subprocess.run(['g++', '-o', 'csv_reader', 'csv_reader.cpp', '-lsqlite3'], capture_output=True, text=True)
+        if compile_result.returncode != 0:
+            return jsonify({"error": "Failed to compile C++ script", "details": compile_result.stderr}), 500
         
+        run_result = subprocess.run(['./csv_reader'], capture_output=True, text=True)
+        if run_result.returncode != 0:
+            return jsonify({"error": "Failed to run C++ script", "details": run_result.stderr}), 500
+
         return jsonify({"success": True, "message": "File uploaded and processed successfully"})
+
 
 
 def clear_database():
@@ -142,6 +184,7 @@ def clear_database():
     con.commit()
     con.close()
 
+# by PYTHON
 def process_csv_and_insert_to_db(file_path):
     con = sqlite3.connect('data.db')
     cur = con.cursor()
@@ -178,4 +221,5 @@ def process_csv_and_insert_to_db(file_path):
     con.close()
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(host='192.168.10.107',  port=5000, debug=True)
+    # app.run(port=5000, debug=True)

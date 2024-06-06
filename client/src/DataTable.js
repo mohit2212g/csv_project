@@ -20,6 +20,7 @@ const DataTable = ({ columns, handleFilterAllData, setFilters, filters }) => {
         setLoading(true);
         setNotification(`Loading page ${page}...`);
         const response = await axios.get(`http://192.168.10.107:5000/data?page=${page}`);
+        // const response = await axios.get(`http://localhost:5000/data?page=${page}`);
         const newData = response.data;
 
         setTotalRecords(newData.recordsTotal);
@@ -83,6 +84,7 @@ const DataTable = ({ columns, handleFilterAllData, setFilters, filters }) => {
       setLoading(true);
       setNotification('Uploading and processing file...');
       const response = await axios.post('http://192.168.10.107:5000/upload_csv', formData, {
+      // const response = await axios.post('http://localhost:5000/upload_csv', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
