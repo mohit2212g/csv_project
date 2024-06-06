@@ -17,7 +17,7 @@ CORS(app)
 
 UPLOAD_FOLDER = '.'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-CSV_FILE_NAME = '123_Output.CSV'
+CSV_FILE_NAME = '123_Output.csv'
 
 
 def query_db(query, args=(), one=False):

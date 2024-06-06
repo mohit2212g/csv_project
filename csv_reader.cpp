@@ -4,7 +4,6 @@
 #include <sstream>
 #include <vector>
 #include <string>
-#include <string_view>
 #include <sqlite3.h>
 
 std::vector<std::string> getNextLineAndSplitIntoTokens(std::istream& str) {
@@ -98,7 +97,7 @@ void clearDatabase(sqlite3* db) {
 }
 
 int main() {
-    std::ifstream file("123_Output.CSV");
+    std::ifstream file("123_Output.csv");
     if (!file.is_open()) {
         std::cerr << "Unable to open file\n";
         return 1;
