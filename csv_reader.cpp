@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include <string_view>
 #include <sqlite3.h>
 
 std::vector<std::string> getNextLineAndSplitIntoTokens(std::istream& str) {
