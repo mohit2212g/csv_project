@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import './DataTable.css';
 import axios from 'axios';
+import Loader from './Loader';
 
-const FilterData = ({ data, columns, totalRecords, handleFilterChange, filters, handleFilterPrevPage, filterNextPage, loading, filterPage, setFilterPage, allDataLoaded, handleBack, handleFilterAllData }) => {
+const FilterData = ({ data, columns, totalRecords, handleFilterChange, filters, handleFilterPrevPage, filterNextPage, filterPage, setFilterPage, allDataLoaded, handleBack, handleFilterAllData }) => {
   const [filterInputs, setFilterInputs] = useState(filters);
   const [filteredDataLocal, setFilteredDataLocal] = useState(data);
+  const [buttonsDisabled, setButtonsDisabled] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState('');
 
   useEffect(() => {
     setFilteredDataLocal(data);
@@ -55,10 +59,14 @@ const FilterData = ({ data, columns, totalRecords, handleFilterChange, filters, 
 
   const downloadFilteredData = async () => {
     try {
+      setLoading(true);
+      setNotification(`Downloading Filter Data`);
+      setButtonsDisabled(true);
+
       const response = await axios.get('http://192.168.10.107:5000/download_filtered_data', {
       // const response = await axios.get('http://localhost:5000/download_filtered_data', {
         params: filterInputs,
-        responseType: 'blob',  // Important
+        responseType: 'blob', 
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -68,10 +76,18 @@ const FilterData = ({ data, columns, totalRecords, handleFilterChange, filters, 
       document.body.appendChild(link);
       link.click();
       link.remove();
+      setLoading(false);
+      setButtonsDisabled(false);
     } catch (error) {
       console.error('Error downloading filtered data:', error);
+      setLoading(false); 
+      setButtonsDisabled(false);
     }
   };
+
+  if (loading) {
+    return <Loader notification={notification} />;
+  }
 
   return (
     <div className="table-container">
@@ -79,7 +95,7 @@ const FilterData = ({ data, columns, totalRecords, handleFilterChange, filters, 
         <button onClick={handleBack}>Back</button>
         <h2>Total Filtered Records: {totalRecords}</h2>
         <h2>Filter Page No. : {filterPage}</h2>
-        <button onClick={downloadFilteredData} disabled={loading}>Download Data</button>
+        <button onClick={downloadFilteredData} disabled={loading || buttonsDisabled}>Download Data</button>
       </div>
       <table>
         <thead>

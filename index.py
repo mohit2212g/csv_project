@@ -9,12 +9,6 @@ import subprocess
 app = Flask(__name__)
 CORS(app)
 
-# UPLOAD_FOLDER = 'uploads'
-# if not os.path.exists(UPLOAD_FOLDER):
-#     os.makedirs(UPLOAD_FOLDER)
-
-# app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
 UPLOAD_FOLDER = '.'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 CSV_FILE_NAME = '123_Output.csv'
@@ -32,7 +26,7 @@ def query_db(query, args=(), one=False):
 @app.route('/data')
 def get_data():
     page = request.args.get('page', type=int)
-    limit = 1000  # Number of rows per page
+    limit = 1000  
     offset = (page - 1) * limit
     
     total_count = query_db('SELECT COUNT(*) as count FROM data', one=True)['count']
@@ -48,8 +42,8 @@ def get_data():
 def filter_data():
     filters = request.args.to_dict()
     print("filters : ", filters)
-    page = int(filters.pop('filterPage', 1))  # Extract the page number, default to 1
-    limit = 1000  # Number of rows per page
+    page = int(filters.pop('filterPage', 1)) 
+    limit = 1000  
     offset = (page - 1) * limit
 
     filter_conditions = []
@@ -172,7 +166,7 @@ def upload_csv():
         if compile_result.returncode != 0:
             return jsonify({"error": "Failed to compile C++ script", "details": compile_result.stderr}), 500
 
-            
+
         
         run_result = subprocess.run(['./csv_reader'], capture_output=True, text=True)
         if run_result.returncode != 0:
@@ -195,8 +189,7 @@ def clear_database():
 def process_csv_and_insert_to_db(file_path):
     con = sqlite3.connect('data.db')
     cur = con.cursor()
-    
-    # Start a transaction
+
     cur.execute("BEGIN TRANSACTION;")
     
     # Create the table if it doesn't exist
@@ -222,11 +215,10 @@ def process_csv_and_insert_to_db(file_path):
                 col21, col22, col23, col24, col25, col26, col27, col28, col29, col30, col31
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
             """, row)
-    
-    # Commit the transaction
+
     con.commit()
     con.close()
 
 if __name__ == '__main__':
-    app.run(host='192.168.10.107',  port=5000, debug=True)
-    # app.run(port=5000, debug=True)
+    # app.run(host='192.168.10.107',  port=5000, debug=True)
+    app.run(port=5000, debug=True)

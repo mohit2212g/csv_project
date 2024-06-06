@@ -13,6 +13,7 @@ const DataTable = ({ columns, handleFilterAllData, setFilters, filters }) => {
   const [allDataLoaded, setAllDataLoaded] = useState(false);
   const [totalRecords, setTotalRecords] = useState(0);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [buttonsDisabled, setButtonsDisabled] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -82,6 +83,7 @@ const DataTable = ({ columns, handleFilterAllData, setFilters, filters }) => {
 
     try {
       setLoading(true);
+      setButtonsDisabled(true);
       setNotification('Uploading and processing file...');
       const response = await axios.post('http://192.168.10.107:5000/upload_csv', formData, {
       // const response = await axios.post('http://localhost:5000/upload_csv', formData, {
@@ -92,11 +94,13 @@ const DataTable = ({ columns, handleFilterAllData, setFilters, filters }) => {
 
       setNotification(response.data.message);
       setLoading(false);
-      // Reload the first page after upload
+      setButtonsDisabled(false);
       setPage(1);
+      window.location.reload();
     } catch (error) {
       setNotification('Error uploading file');
       setLoading(false);
+      setButtonsDisabled(false);
     }
   };
 
