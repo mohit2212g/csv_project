@@ -162,10 +162,17 @@ def upload_csv():
         # Clear the database
         clear_database()
         
-        # Compile and run the C++ script to process the CSV and insert data into the database
-        compile_result = subprocess.run(['g++', '-o', 'csv_reader', 'csv_reader.cpp', '-lsqlite3'], capture_output=True, text=True)
+        # # Compile and run the C++ script to process the CSV and insert data into the database
+        # compile_result = subprocess.run(['g++', '-o', 'csv_reader', 'csv_reader.cpp', '-lsqlite3'], capture_output=True, text=True)
+        # if compile_result.returncode != 0:
+        #     return jsonify({"error": "Failed to compile C++ script", "details": compile_result.stderr}), 500
+
+        # Compile the C++ script
+        compile_result = subprocess.run(['g++', '-std=c++17', '-o', 'csv_reader', 'csv_reader.cpp', '-lsqlite3'], capture_output=True, text=True)
         if compile_result.returncode != 0:
             return jsonify({"error": "Failed to compile C++ script", "details": compile_result.stderr}), 500
+
+            
         
         run_result = subprocess.run(['./csv_reader'], capture_output=True, text=True)
         if run_result.returncode != 0:
