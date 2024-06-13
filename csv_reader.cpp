@@ -1,4 +1,3 @@
-#include <iterator>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -84,18 +83,6 @@ public:
     CSVIterator end() const { return CSVIterator{}; }
 };
 
-void clearDatabase(sqlite3* db) {
-    char* errMsg = nullptr;
-    const char* sql = "DELETE FROM data;";
-    if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
-        std::cerr << "SQL error: " << errMsg << "\n";
-        sqlite3_free(errMsg);
-        sqlite3_close(db);
-        exit(1); // Exit the program if clearing fails
-    }
-    std::cout << "Database cleared successfully.\n";
-}
-
 int main() {
     std::ifstream file("123_Output.csv");
     if (!file.is_open()) {
@@ -109,26 +96,55 @@ int main() {
         return 1;
     }
 
-    // Clear the database
-    //clearDatabase(db);
+    // Read the first row to determine the number of columns
+    std::string first_line;
+    std::getline(file, first_line);
+    std::stringstream ss(first_line);
+    std::vector<std::string> columns;
+    std::string token;
+    while (std::getline(ss, token, ',')) {
+        columns.push_back(token);
+    }
 
-    const char* sql = "BEGIN TRANSACTION;"
-                      "CREATE TABLE IF NOT EXISTS data ("
-                      "col1 TEXT, col2 TEXT, col3 TEXT, col4 TEXT, col5 TEXT, "
-                      "col6 TEXT, col7 TEXT, col8 TEXT, col9 TEXT, col10 TEXT, "
-                      "col11 TEXT, col12 TEXT, col13 TEXT, col14 TEXT, col15 TEXT, "
-                      "col16 TEXT, col17 TEXT, col18 TEXT, col19 TEXT, col20 TEXT, "
-                      "col21 TEXT, col22 TEXT, col23 TEXT, col24 TEXT, col25 TEXT, "
-                      "col26 TEXT, col27 TEXT, col28 TEXT, col29 TEXT, col30 TEXT, "
-                      "col31 TEXT);";
+    // Create table dynamically
+    std::string create_table_sql = "BEGIN TRANSACTION; CREATE TABLE IF NOT EXISTS data (";
+    for (size_t i = 0; i < columns.size(); ++i) {
+        create_table_sql += "col" + std::to_string(i + 1) + " TEXT";
+        if (i < columns.size() - 1) {
+            create_table_sql += ", ";
+        }
+    }
+    create_table_sql += ");";
+    
     char* errMsg = nullptr;
-    if (sqlite3_exec(db, sql, nullptr, nullptr, &errMsg) != SQLITE_OK) {
+    if (sqlite3_exec(db, create_table_sql.c_str(), nullptr, nullptr, &errMsg) != SQLITE_OK) {
         std::cerr << "SQL error: " << errMsg << "\n";
         sqlite3_free(errMsg);
     }
 
+    // Prepare insert statement dynamically
+    std::string insert_sql = "INSERT INTO data (";
+    for (size_t i = 0; i < columns.size(); ++i) {
+        insert_sql += "col" + std::to_string(i + 1);
+        if (i < columns.size() - 1) {
+            insert_sql += ", ";
+        }
+    }
+    insert_sql += ") VALUES (";
+    for (size_t i = 0; i < columns.size(); ++i) {
+        insert_sql += "?";
+        if (i < columns.size() - 1) {
+            insert_sql += ", ";
+        }
+    }
+    insert_sql += ");";
+    
     sqlite3_stmt* stmt;
-    sqlite3_prepare_v2(db, "INSERT INTO data (col1, col2, col3, col4, col5, col6, col7, col8, col9, col10, col11, col12, col13, col14, col15, col16, col17, col18, col19, col20, col21, col22, col23, col24, col25, col26, col27, col28, col29, col30, col31) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", -1, &stmt, NULL);
+    sqlite3_prepare_v2(db, insert_sql.c_str(), -1, &stmt, NULL);
+
+    // Rewind the file to the beginning
+    file.clear();
+    file.seekg(0, std::ios::beg);
 
     for (auto& row : CSVRange(file)) {
         for (int i = 0; i < row.size(); ++i) {

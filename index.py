@@ -23,6 +23,22 @@ def query_db(query, args=(), one=False):
     con.close()
     return (rv[0] if rv else None) if one else rv
 
+@app.route('/get_columns', methods=['GET'])
+def get_columns():
+    try:
+        con = sqlite3.connect('data.db')
+        cur = con.cursor()
+        
+        cur.execute("PRAGMA table_info(data);")
+        columns = [row[1] for row in cur.fetchall()]
+        
+        con.close()
+        
+        return jsonify(columns)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/data')
 def get_data():
     page = request.args.get('page', type=int)
@@ -123,16 +139,21 @@ def download_filtered_data():
 #     if file.filename == '':
 #         return jsonify({"error": "No selected file"}), 400
 #     if file:
-#         file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+#         file_path = os.path.join(app.config['UPLOAD_FOLDER'], CSV_FILE_NAME)
+        
+#         # Delete the old file if it exists
+#         if os.path.exists(file_path):
+#             os.remove(file_path)
+        
+#         # Save the new file
 #         file.save(file_path)
         
 #         # Clear the database
 #         clear_database()
         
-#         # Process the CSV file and insert data into the database by PYTHON
+#         # Process the CSV file and insert data into the database
 #         process_csv_and_insert_to_db(file_path)
 
-        
 #         return jsonify({"success": True, "message": "File uploaded and processed successfully"})
 
 # by C++
@@ -186,39 +207,35 @@ def clear_database():
     con.close()
 
 # by PYTHON
+
+def get_column_count(file_path):
+    with open(file_path, 'r') as csvfile:
+        reader = csv.reader(csvfile)
+        header = next(reader)
+        return len(header)
+    
+    
 def process_csv_and_insert_to_db(file_path):
+    column_count = get_column_count(file_path)
+    columns = ', '.join([f'col{i+1} TEXT' for i in range(column_count)])
+    placeholders = ', '.join(['?' for _ in range(column_count)])
+    
     con = sqlite3.connect('data.db')
     cur = con.cursor()
 
     cur.execute("BEGIN TRANSACTION;")
     
     # Create the table if it doesn't exist
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS data (
-        col1 TEXT, col2 TEXT, col3 TEXT, col4 TEXT, col5 TEXT, 
-        col6 TEXT, col7 TEXT, col8 TEXT, col9 TEXT, col10 TEXT, 
-        col11 TEXT, col12 TEXT, col13 TEXT, col14 TEXT, col15 TEXT, 
-        col16 TEXT, col17 TEXT, col18 TEXT, col19 TEXT, col20 TEXT, 
-        col21 TEXT, col22 TEXT, col23 TEXT, col24 TEXT, col25 TEXT, 
-        col26 TEXT, col27 TEXT, col28 TEXT, col29 TEXT, col30 TEXT, 
-        col31 TEXT
-    );
-    """)
+    cur.execute(f"CREATE TABLE IF NOT EXISTS data ({columns});")
     
     with open(file_path, 'r') as csvfile:
         csv_reader = csv.reader(csvfile)
         for row in csv_reader:
-            cur.execute("""
-            INSERT INTO data (
-                col1, col2, col3, col4, col5, col6, col7, col8, col9, col10, 
-                col11, col12, col13, col14, col15, col16, col17, col18, col19, col20, 
-                col21, col22, col23, col24, col25, col26, col27, col28, col29, col30, col31
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-            """, row)
+            cur.execute(f"INSERT INTO data VALUES ({placeholders});", row)
 
     con.commit()
     con.close()
 
 if __name__ == '__main__':
-    app.run(host='192.168.10.107',  port=5000, debug=True)
-    # app.run(port=5000, debug=True)
+    # app.run(host='192.168.10.107',  port=5000, debug=True)
+    app.run(port=5000, debug=True)
