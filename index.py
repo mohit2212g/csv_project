@@ -198,13 +198,14 @@ def upload_csv():
 
 
 def clear_database():
-    con = sqlite3.connect('data.db')
-    cur = con.cursor()
-    cur.execute('DELETE FROM data')
-    con.commit()
-    cur.execute('VACUUM')
-    con.commit()
-    con.close()
+    os.remove('data.db')
+    # con = sqlite3.connect('data.db')
+    # cur = con.cursor()
+    # cur.execute('DELETE FROM data')
+    # con.commit()
+    # cur.execute('VACUUM')
+    # con.commit()
+    # con.close()
 
 # by PYTHON
 
@@ -237,5 +238,5 @@ def process_csv_and_insert_to_db(file_path):
     con.close()
 
 if __name__ == '__main__':
-    # app.run(host='192.168.10.107',  port=5000, debug=True)
-    app.run(port=5000, debug=True)
+    app.run(host='192.168.10.107',  port=5000, debug=True)
+    # app.run(port=5000, debug=True)
